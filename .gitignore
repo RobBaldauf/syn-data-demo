@@ -144,3 +144,6 @@ dmypy.json
 
 # hydra
 outputs/
+
+# VS Code settings
+.vscode/

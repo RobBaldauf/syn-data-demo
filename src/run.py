@@ -23,9 +23,7 @@ def main(cfg: DictConfig)-> None:
             save_memory=cfg.enable_save_memory, 
             model_path= Path(cfg.canny.model_path),
             checkpoint_path=Path(cfg.canny.checkpoint_path),
-            device="cuda" if cfg.enable_cuda else "cpu",
-            low_threshold=cfg.canny.low_threshold,
-            high_threshold=cfg.canny.high_threshold,
+            device="cuda" if cfg.enable_cuda else "cpu"
         )
     generator.gradio_ui().launch(server_name='0.0.0.0')
 

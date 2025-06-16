@@ -22,16 +22,14 @@ from image_utils import take_luminance_from_first_chroma_from_second
 class MriImageGeneration:
     """Class for generating MRI images using ControlNet with Canny edge maps."""
 
-    def __init__(self, save_memory:bool, model_path:Path, checkpoint_path:Path, low_threshold:int, high_threshold:int, device:str='cpu')->None:
+    def __init__(self, save_memory:bool, model_path:Path, checkpoint_path:Path, device:str='cpu')->None:
         """Initialize the MRI image generation model with ControlNet and Canny edge maps.
         
         Args:
-            save_memory (bool): Whether to save memory by using low VRAM mode.
-            model_path (Path): Path to the ControlNet model.
-            checkpoint_path (Path): Path to the model checkpoint.
-            low_threshold (int): Low threshold for Canny edge detection.
-            high_threshold (int): High threshold for Canny edge detection.
-            device (str): Device to run the model on ('cpu' or 'cuda').
+            save_memory: Whether to save memory by using low VRAM mode.
+            model_path: Path to the ControlNet model.
+            checkpoint_path: Path to the model checkpoint.
+            device: Device to run the model on ('cpu' or 'cuda').
         
         """
         self._save_memory = save_memory
@@ -40,13 +38,12 @@ class MriImageGeneration:
         self._model.load_state_dict(load_state_dict(checkpoint_path, location=self._device))
         if self._device == 'cuda':
             model = model.cuda()
-        self._ddim_sampler = DDIMSampler(self._model)
+        self._ddim_sampler = DDIMSampler(self._model, device=self._device)
         self._apply_canny = CannyDetector()
-        self._low_threshold=low_threshold
-        self._high_threshold=high_threshold
 
-    def process_sample(self, input_image:np.ndarray, prompt:str,  a_prompt:str, n_prompt:str, num_samples:int, image_resolution:int, ddim_steps:int, guess_mode:bool, strength:int, scale:float, seed:int, eta:float)->List[np.ndarray]:
+    def process_sample(self, input_image:np.ndarray, prompt:str,  a_prompt:str, n_prompt:str, num_samples:int, image_resolution:int, ddim_steps:int, guess_mode:bool, strength:int, scale:float, seed:int, eta:float,low_threshold:int,high_threshold:int)->List[np.ndarray]:
         """Process a sample image and generate MRI images using ControlNet with Canny edge maps.
+        
         Args:
             input_image: Input image to process.
             prompt: Text prompt for image generation.
@@ -59,12 +56,15 @@ class MriImageGeneration:
             strength: Strength of the control signal.
             scale: Guidance scale for the model.
             seed: Random seed for reproducibility.
-            eta: Eta value for DDIM sampling."""
+            eta: Eta value for DDIM sampling.
+            low_threshold: Low threshold for Canny edge detection.
+            high_threshold: High threshold for Canny edge detection.
+        """
         with torch.no_grad():
             img = resize_image(HWC3(input_image), image_resolution)
             H, W, C = img.shape
 
-            detected_map = self._apply_canny(img, self._low_threshold, self._high_threshold)
+            detected_map = self._apply_canny(img, low_threshold, high_threshold)
             detected_map = HWC3(detected_map)
 
             if self._device == 'cuda':

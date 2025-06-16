@@ -4,5 +4,3 @@ enable_save_memory: True
 canny:
   model_path: models/cldm_v15.yaml
   checkpoint_path: models/control_sd15_canny.pth
-  low_threshold: 50
-  high_threshold: 100
